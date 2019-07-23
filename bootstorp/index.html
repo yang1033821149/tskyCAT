@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="bootstrap-3.3.7/dist/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <style>
+        .container-fluid {
+            width: 80%;
+        }
+
+        .container-fluid .list div {
+            background: #eee;
+
+        }
+
+        .btn-danger {
+            margin-left: 10px;
+        }
+
+        .row {
+            text-align: center;
+            margin: 0 auto 10px 0;
+            line-height: 40px;
+            height: 40px;
+            box-sizing: border-box;
+
+        }
+
+        .row div {
+            border: 1px solid #eee;
+        }
+
+        .input input {
+            height: 37px;
+            line-height: 37px;
+            width: 100%;
+            outline: none;
+
+        }
+    </style>
+    <script src="../AJAX/ajax.js"></script>
+    <script src="bootstrap-3.3.7/dist/js/bootstrap.js"></script>
+    <script>
+
+        class Render {
+
+
+
+            static ajaxs() {
+                var _me = this;
+                AJAX.request({
+
+                    api: "/PHPzsgc/query.php",
+                    success: function (data) {
+                        data = window.eval("(" + data + ")");
+                        Render.create(data);
+                        Render.delete();
+                        Render.instea();
+                        Render.eventS();
+                    }
+                })
+
+            }
+
+            static create(_data) {
+                var list = _data.list;
+                console.log(list);
+                var str = ` <div class="row list">
+            <div class="col-md-3">名字</div>
+            <div class="col-md-3">性别</div>
+            <div class="col-md-3">手机号</div>
+            <div class="col-md-3">按钮</div>
+        </div>  
+        <div class="row input">
+                <div class="col-md-3"><input type="text" name="account" placeholder="请输入姓名"></div>
+                <div class="col-md-3"><input type="text" name="sex" placeholder="性别"></div>
+                <div class="col-md-3"><input type="text" name="phone" placeholder="请输入手机号"></div>
+                <div class="col-md-3"><button type="button" class="btn btn-success">确认提交</button>
+
+                </div>
+            </div>`;
+                for (var i = 0; i < list.length; i++) {
+
+                    str += `<div class="row" data="${list[i].ID}">
+            <div class="col-md-3">${list[i].name}</div>
+            <div class="col-md-3">${(list[i].sex == 1 ? "男" : "女")}</div>
+            <div class="col-md-3">${list[i].phone}</div>
+            <div class="col-md-3"><button type="button" class="btn btn-warning" data-toggle="modal" data-target="#myModal">修改</button>
+                <button type="button" class="btn btn-danger">删除</button>
+
+</div>
+        </div>`;
+
+                }
+                document.getElementById('container').innerHTML = str;
+
+            }
+            static delete() {
+                var container = document.getElementById('container');
+                var btn = container.querySelectorAll('.btn-danger');
+                for (let i = 0; i < btn.length; i++) {
+                    btn[i].onclick = function () {
+
+                        var dd = this.parentNode.parentNode.getAttribute("data");
+                        AJAX.request({
+                            api: "/PHPzsgc/delete.php",
+                            send: "ID=" + dd,
+                            success: function (_data) {
+
+                                _data = window.eval("(" + _data + ")");
+                                if (_data.code == 2000) {
+                                    alert("删除成功");
+                                    Render.ajaxs();
+                                }
+                            }
+                        })
+                    }
+                }
+
+            }
+            static instea() {
+                var _input = document.querySelector(".input");
+                var list = _input.querySelectorAll("input");
+                _input.children[3].children[0].onclick = function (e) {
+                    e = e || window.event;
+                    var name = list[0].value,
+                        sex = (list[1].value == "男" ? "1" : "0"),
+                        phone = list[2].value;
+                    AJAX.request({
+                        method: "POST",
+                        api: "/PHPzsgc/signUp.php",
+                        send: "account=" + name + "&sex=" + sex + "&phone=" + phone,
+                        success: function (_data) {
+                            console.log(_data);
+                            Render.ajaxs();
+                        }
+                    })
+
+
+
+                }
+
+            }
+            static eventS() {
+                $('.btn-warning').click('shown.bs.modal', function () {
+                  
+                    $('.modal-dialog').css('display','block');
+                    var divs = this.parentNode.parentNode;
+                    let dd = divs.getAttribute('data');
+
+                    var _input = $(".modal-body").get(0);
+                    _input.children[0].value = divs.children[0].innerText;
+                    _input.children[1].value = divs.children[1].innerText;
+                    _input.children[2].value = divs.children[2].innerText;
+
+                   
+                         document.querySelector(".submit").onclick=function(){
+
+                 
+                      
+                        var _input = $(".modal-body").get(0);
+                        var name = _input.children[0].value;
+                        var sex = (_input.children[1].value == "女" ? "0" : "1");
+                        var phone = _input.children[2].value;
+                        console.log(name, sex, phone);
+                        AJAX.request({
+                            method: "POST",
+                            api: "/PHPzsgc/update.php",
+                            send: "name=" + name + "&sex=" + sex + "&phone=" + phone + "&ID=" + dd,
+                            success: function (_data) {
+                                //_data = window.eval("(" + _data + ")");
+                                console.log(_data);
+                                Render.ajaxs();
+                                $('.modal-dialog').css('display','none');
+                            }
+                        })
+                
+                            
+                    }
+                      
+                       
+
+                       
+                
+                })
+
+            }
+        }
+
+
+        function main() {
+
+            Render.ajaxs();
+
+        }
+
+        window.onload = main;
+    </script>
+</head>
+
+<body>
+    <div class="container-fluid" id="container">
+    </div>
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        修改数据
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input type="text" name="name">
+                    <input type="text" name="sex">
+                    <input type="text" name="phone">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭
+                    </button>
+                    <button type="button" class="btn btn-primary submit" data-dismiss="modal">
+                        提交更改
+                    </button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal -->
+    </div>
+
+</body>
+
+</html>
